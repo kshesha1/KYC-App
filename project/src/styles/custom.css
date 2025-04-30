@@ -1,0 +1,266 @@
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.05);
+}
+
+.gradient-border {
+  position: relative;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(
+    60deg,
+    rgba(101, 58, 245, 0.1),
+    rgba(101, 58, 245, 0.3)
+  );
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(
+    60deg,
+    rgba(101, 58, 245, 0.2),
+    rgba(101, 58, 245, 0.4)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -6px rgba(101, 58, 245, 0.15);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.field-container {
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06), 
+              0 2px 8px -2px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.field-container:hover {
+  box-shadow: 0 12px 32px -4px rgba(101, 58, 245, 0.12),
+              0 4px 16px -2px rgba(101, 58, 245, 0.08);
+  border-color: rgba(101, 58, 245, 0.08);
+  transform: translateY(-1px);
+}
+
+.field-header {
+  border-bottom: 1px solid rgba(101, 58, 245, 0.08);
+  padding: 16px 20px;
+  border-radius: 12px 12px 0 0;
+  background: linear-gradient(
+    120deg,
+    rgba(101, 58, 245, 0.03) 0%,
+    rgba(139, 92, 246, 0.03) 50%,
+    rgba(101, 58, 245, 0.06) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.field-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(101, 58, 245, 0.1),
+    transparent
+  );
+}
+
+.field-content {
+  padding: 20px;
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(101, 58, 245, 0.02) 100%
+  );
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #653AF5, #8B5CF6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(101, 58, 245, 0.2);
+}
+
+.button-secondary {
+  background: rgba(101, 58, 245, 0.1);
+  color: #653AF5;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.button-secondary:hover {
+  background: rgba(101, 58, 245, 0.15);
+}
+
+.input-field {
+  border: 1px solid rgba(101, 58, 245, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+}
+
+.input-field:focus {
+  border-color: #653AF5;
+  box-shadow: 0 0 0 3px rgba(101, 58, 245, 0.1);
+}
+
+.select-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23653AF5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 32px;
+}
+
+.condition-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.05),
+              0 2px 8px -2px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(101, 58, 245, 0.06);
+}
+
+.condition-card:hover {
+  box-shadow: 0 8px 24px -4px rgba(101, 58, 245, 0.08),
+              0 4px 12px -2px rgba(101, 58, 245, 0.06);
+  border-color: rgba(101, 58, 245, 0.1);
+}
+
+.fields-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(229, 231, 235, 0.8),
+    transparent
+  );
+  margin: 24px 0;
+}
+
+.icon-button {
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #653AF5;
+}
+
+.icon-button:hover {
+  background: rgba(101, 58, 245, 0.1);
+}
+
+.icon-button.danger {
+  color: #EF4444;
+}
+
+.icon-button.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.section-header {
+  background: linear-gradient(
+    120deg,
+    rgba(101, 58, 245, 0.04) 0%,
+    rgba(139, 92, 246, 0.06) 50%,
+    rgba(101, 58, 245, 0.08) 100%
+  );
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid rgba(101, 58, 245, 0.06);
+  box-shadow: 0 4px 16px -4px rgba(101, 58, 245, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.section-header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23653AF5' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.drag-handle {
+  cursor: grab;
+  padding: 8px;
+  border-radius: 8px;
+  color: #653AF5;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  opacity: 1;
+  background: rgba(101, 58, 245, 0.1);
+} 

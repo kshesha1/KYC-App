@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+ 
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+ 
+    --primary: 270 63% 38%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 270 10% 96%;
+    --secondary-foreground: 270 63% 38%;
+ 
+    --muted: 270 10% 96%;
+    --muted-foreground: 270 5% 46%;
+ 
+    --accent: 270 10% 96%;
+    --accent-foreground: 270 63% 38%;
+ 
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 10% 90%;
+    --input: 270 10% 90%;
+    --ring: 270 63% 38%;
+ 
+    --radius: 0.5rem;
+  }
+ 
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+ 
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+ 
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+ 
+    --primary: 270 54% 50%;
+    --primary-foreground: 0 0% 100%;
+ 
+    --secondary: 270 33% 17%;
+    --secondary-foreground: 0 0% 100%;
+ 
+    --muted: 270 33% 17%;
+    --muted-foreground: 270 20% 65%;
+ 
+    --accent: 270 33% 17%;
+    --accent-foreground: 0 0% 100%;
+ 
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+ 
+    --border: 270 33% 17%;
+    --input: 270 33% 17%;
+    --ring: 270 54% 50%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* DXC Logo styles */
+.dxc-logo {
+  @apply relative flex items-center justify-center;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><path fill="%235F249F" d="M39.7 0H20l9.9 20-9.9 20h19.7l9.9-20-9.9-20zM19.8 0L9.9 20l9.9 20H0l9.9-20L0 0h19.8z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.dxc-logo-text {
+  @apply font-bold tracking-tight text-dxc-purple;
+  font-family: Arial, sans-serif;
+}
+
+/* Custom utility classes */
+.logo-placeholder {
+  @apply relative flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200;
+}
+
+.logo-placeholder::after {
+  content: "Your Logo";
+  @apply absolute text-sm font-medium text-blue-400;
+}
