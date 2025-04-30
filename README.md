@@ -10,12 +10,37 @@ A modern, user-friendly Know Your Customer (KYC) verification system built with 
 
 ## Key Features
 
-- 📝 Easy form submission and management
+- 📝 Smart Form Management
+  - Real-time validation
+  - Auto-save & recovery
+  - Multi-language support
+  - Document upload with preview
+  - Smart input assistance
 - 👥 Role-based access control
 - 📊 Real-time status tracking
 - 🔍 Advanced search and filtering
 - 👤 Comprehensive profile management
 - 📱 Responsive design for all devices
+- 🔒 Enterprise-Grade Security
+  - End-to-end encryption
+  - Secure document handling
+  - Data masking
+- ♿ Accessibility Features
+  - Screen reader support
+  - Keyboard navigation
+  - High contrast mode
+
+## Form Capabilities
+
+Our KYC form system includes:
+- Smart document validation
+- Address lookup & verification
+- Multiple ID type support
+- Automatic format checking
+- Progress auto-save
+- Document quality checks
+- Collaboration tools
+- Multi-language support
 
 ## Documentation
 

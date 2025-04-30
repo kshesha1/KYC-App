@@ -54,6 +54,137 @@ Welcome to the KYC (Know Your Customer) Application! This application streamline
 3. Upload necessary documents
 4. Submit for review
 
+### Form Features and Capabilities
+
+#### Smart Form Validation
+- Real-time field validation
+- Automatic format checking for:
+  - Email addresses
+  - Phone numbers (international formats supported)
+  - Date fields
+  - Document numbers
+- Instant feedback on validation errors
+
+#### Document Upload Features
+- **Supported Formats:**
+  - Images: JPG, PNG, JPEG (max 5MB)
+  - Documents: PDF (max 10MB)
+  - Scanned copies: TIFF, BMP
+- **Document Processing:**
+  - Automatic image optimization
+  - PDF page preview
+  - Built-in image cropping tool
+  - Document quality checker
+
+#### Auto-Save and Recovery
+- Automatic saving of form progress every 30 seconds
+- Form recovery in case of browser crash
+- Draft saving functionality
+- Resume from last edited section
+
+#### Smart Input Assistance
+- **Address Lookup:**
+  - Type postal code to auto-fill address
+  - Google Maps integration for location verification
+  - Address format standardization
+- **Document Number Validation:**
+  - Automatic ID number format validation
+  - Passport number format checking
+  - Tax ID number verification
+- **Name Fields:**
+  - Proper case conversion
+  - Multiple language character support
+  - Title/Suffix handling
+
+#### Dynamic Form Sections
+1. **Personal Information**
+   - Full name with title options
+   - Date of birth with age calculation
+   - Nationality with multiple citizenship support
+   - Gender options including "Prefer not to say"
+
+2. **Contact Details**
+   - Multiple phone numbers
+   - Primary and secondary email
+   - Emergency contact information
+   - Preferred contact method selection
+
+3. **Address Information**
+   - Current residential address
+   - Permanent address option
+   - Previous address history
+   - Proof of address document upload
+
+4. **Identity Verification**
+   - Multiple ID type support:
+     - National ID
+     - Passport
+     - Driver's License
+     - Social Security Number
+   - Document expiry tracking
+   - Digital signature capture
+   - Selfie verification option
+
+5. **Employment Details**
+   - Current employment status
+   - Employer information
+   - Income range selection
+   - Employment history
+
+6. **Additional Documents**
+   - Tax returns
+   - Bank statements
+   - Utility bills
+   - Reference letters
+
+#### Form Accessibility Features
+- Screen reader compatibility
+- Keyboard navigation support
+- High contrast mode
+- Font size adjustment
+- Form progress indicator
+
+#### Multi-language Support
+- Form available in multiple languages
+- Automatic language detection
+- Real-time language switching
+- Localized validation messages
+
+#### Security Features
+- **Data Encryption:**
+  - End-to-end encryption
+  - Secure document storage
+  - Encrypted form submission
+- **Privacy Controls:**
+  - Data masking for sensitive information
+  - Configurable visibility settings
+  - Audit trail of form access
+
+#### Collaboration Features
+- Add comments to specific sections
+- Tag reviewers for specific items
+- Share form progress with authorized users
+- Request additional information from applicants
+
+### Form Submission and Review
+1. **Pre-submission Checklist:**
+   - Automatic document completeness check
+   - Required field verification
+   - Document quality validation
+   - Final review summary
+
+2. **Submission Confirmation:**
+   - Receive submission reference number
+   - Email confirmation
+   - Download form copy option
+   - Track submission status
+
+3. **Review Process:**
+   - Real-time status updates
+   - Reviewer comments visibility
+   - Document revision requests
+   - Appeal process for rejections
+
 ### Viewing Forms
 - Click on any form to view details
 - Use the copy button in the top-right corner to copy form details
