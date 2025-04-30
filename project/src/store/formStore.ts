@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import type { FormState, Section, Field, FormVersion } from '../types/form';
+import type { FormState, Section, Field, FormVersion, Form } from '../types/form';
 
 const createInitialVersion = (sections: Section[]): FormVersion => ({
   id: uuidv4(),
@@ -11,10 +11,11 @@ const createInitialVersion = (sections: Section[]): FormVersion => ({
 
 export const useFormStore = create<FormState>((set, get) => ({
   sections: [],
-  isEditMode: true,
+  isEditMode: false,
+  isDirty: false,
   currentVersion: null,
   versions: [],
-  isDirty: false,
+  clonedFrom: null,
 
   addSection: (section) =>
     set((state) => {
@@ -123,33 +124,34 @@ export const useFormStore = create<FormState>((set, get) => ({
       isEditMode: !state.isEditMode,
     })),
 
-  saveVersion: (description) =>
-    set((state) => {
-      const newVersion: FormVersion = {
-        id: uuidv4(),
-        timestamp: Date.now(),
-        sections: JSON.parse(JSON.stringify(state.sections)),
-        description,
-      };
+  saveVersion: (description: string) => {
+    const state = get();
+    const newVersion: FormVersion = {
+      id: uuidv4(),
+      version: state.versions.length + 1,
+      timestamp: Date.now(),
+      sections: state.sections,
+      description: description || `Version ${state.versions.length + 1}`,
+    };
 
-      return {
-        versions: [...state.versions, newVersion],
-        currentVersion: newVersion.id,
+    set((state) => ({
+      versions: [...state.versions, newVersion],
+      currentVersion: newVersion,
+      isDirty: false,
+    }));
+  },
+
+  loadVersion: (versionId: string) => {
+    const state = get();
+    const version = state.versions.find((v) => v.id === versionId);
+    if (version && version.id === versionId) {
+      set({
+        sections: version.sections,
+        currentVersion: version,
         isDirty: false,
-      };
-    }),
-
-  loadVersion: (versionId) =>
-    set((state) => {
-      const version = state.versions.find((v) => v.id === versionId);
-      if (!version) return state;
-
-      return {
-        sections: JSON.parse(JSON.stringify(version.sections)),
-        currentVersion: versionId,
-        isDirty: false,
-      };
-    }),
+      });
+    }
+  },
 
   discardChanges: () =>
     set((state) => {
@@ -163,4 +165,22 @@ export const useFormStore = create<FormState>((set, get) => ({
         isDirty: false,
       };
     }),
+
+  cloneForm: (form: Form) => {
+    const clonedSections = form.sections.map((section: Section) => ({
+      ...section,
+      id: uuidv4(),
+      fields: section.fields.map((field: Field) => ({
+        ...field,
+        id: uuidv4(),
+      })),
+    }));
+
+    set({
+      sections: clonedSections,
+      isEditMode: true,
+      isDirty: true,
+      clonedFrom: form.id,
+    });
+  },
 }));

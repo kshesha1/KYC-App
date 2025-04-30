@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusCircle, FileText, Edit2, Trash2, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter } from 'lucide-react';
+import { PlusCircle, FileText, Edit2, Trash2, Calendar, Clock, CheckCircle, XCircle, AlertCircle, Filter, Copy } from 'lucide-react';
 import { useFinishedFormsStore, FinishedForm, ApprovalStatus } from '../store/finishedFormStore';
 import { useUserStore } from '../store/userStore';
 import { cn } from '../lib/utils';
@@ -7,11 +7,12 @@ import { cn } from '../lib/utils';
 interface DashboardProps {
   onCreateNewForm: () => void;
   onEditForm: (formId: string) => void;
+  onCreateBasedOn: (formId: string) => void;
 }
 
 type FilterStatus = 'all' | ApprovalStatus;
 
-export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditForm }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditForm, onCreateBasedOn }) => {
   const { forms, deleteForm, approveForm, rejectForm } = useFinishedFormsStore();
   const { user } = useUserStore();
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
@@ -187,13 +188,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
                 <div className="flex gap-2">
                   {isMaker && (
                     <>
-                      {form.approvalStatus === 'pending' && (
+                      {(form.approvalStatus === 'approved' || form.approvalStatus === 'rejected') && (
                         <button
-                          onClick={() => onEditForm(form.id)}
+                          onClick={() => onCreateBasedOn(form.id)}
                           className="p-1.5 rounded-full hover:bg-gray-100"
-                          title="Edit form"
+                          title="Create new form based on this one"
                         >
-                          <Edit2 className="w-4 h-4 text-gray-600" />
+                          <Copy className="w-4 h-4 text-gray-600" />
                         </button>
                       )}
                       <button
@@ -208,7 +209,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
                 </div>
               </div>
               
-              <div className="mb-3">
+              <div className="mb-3 flex items-center gap-2">
                 {renderStatusBadge(form.approvalStatus)}
               </div>
 
@@ -257,12 +258,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
                       </button>
                     </div>
                   ) : (
-                    <button
-                      onClick={() => onEditForm(form.id)}
-                      className="text-sm font-medium text-dxc-purple hover:text-dxc-purple-dark"
-                    >
-                      {isChecker ? "View" : "Open"} &rarr;
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => onEditForm(form.id)}
+                        className="text-sm font-medium text-dxc-purple hover:text-dxc-purple-dark"
+                      >
+                        {isChecker ? "View" : "Open"} &rarr;
+                      </button>
+                      {isMaker && (form.approvalStatus === 'approved' || form.approvalStatus === 'rejected') && (
+                        <button
+                          onClick={() => onCreateBasedOn(form.id)}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Create New</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

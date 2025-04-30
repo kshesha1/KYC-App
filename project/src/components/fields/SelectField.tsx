@@ -12,9 +12,9 @@ interface SelectFieldProps {
   onMultiSelectChange?: (isMultiSelect: boolean) => void;
 }
 
-export const SelectField: React.FC<SelectFieldProps> = ({ 
-  field, 
-  onChange, 
+export const SelectField: React.FC<SelectFieldProps> = ({
+  field,
+  onChange,
   disabled = false,
   isEditMode = false,
   onOptionsChange,
@@ -164,7 +164,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
             <div
               key={option}
               onClick={() => handleOptionSelect(option)}
-              className={cn(
+      className={cn(
                 "px-4 py-2 cursor-pointer flex items-center gap-2",
                 "hover:bg-gray-50",
                 selectedValues.includes(option) && "bg-blue-50 text-blue-700"
@@ -237,7 +237,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
                 <button
                   onClick={() => handleOptionDelete(index)}
                   className="p-1 text-gray-600 hover:text-red-600"
-                >
+    >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>

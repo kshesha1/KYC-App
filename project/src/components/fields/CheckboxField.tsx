@@ -68,7 +68,7 @@ export const CheckboxField = ({
     }
   };
 
-  return (
+    return (
     <div className="space-y-3">
       {/* Title Section */}
       <div className="group flex items-center gap-2">
@@ -128,7 +128,7 @@ export const CheckboxField = ({
         <div className="flex-1 flex items-center gap-2">
           {isEditMode && isEditingLabel ? (
             <div className="flex items-center gap-2 flex-1">
-              <input
+          <input
                 type="text"
                 value={labelValue}
                 onChange={(e) => setLabelValue(e.target.value)}
@@ -148,7 +148,7 @@ export const CheckboxField = ({
           ) : (
             <label
               htmlFor={field.id}
-              className={cn(
+            className={cn(
                 "text-sm font-medium text-gray-900 flex-1",
                 disabled && "cursor-not-allowed opacity-50"
               )}
@@ -162,7 +162,7 @@ export const CheckboxField = ({
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
               )}
-            </label>
+        </label>
           )}
         </div>
       </div>

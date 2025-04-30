@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Check } from 'lucide-react';
 import { useFormStore } from '../store/formStore';
 import { useFinishedFormsStore } from '../store/finishedFormStore';
@@ -9,18 +9,33 @@ interface SaveFormButtonProps {
 }
 
 export const SaveFormButton: React.FC<SaveFormButtonProps> = ({ onSuccess }) => {
-  const { sections, saveVersion } = useFormStore();
-  const { addForm } = useFinishedFormsStore();
+  const { sections, saveVersion, clonedFrom } = useFormStore();
+  const { addForm, getForm } = useFinishedFormsStore();
   const { user } = useUserStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [originalForm, setOriginalForm] = useState<any>(null);
 
   // If no user or user is not a maker, don't render the button
   if (!user || user.role !== 'maker') {
     return null;
   }
+
+  // If this form is based on another form, get the original form details
+  useEffect(() => {
+    if (clonedFrom) {
+      const original = getForm(clonedFrom);
+      if (original) {
+        setOriginalForm(original);
+        // Pre-fill the title with the original form title + " (Copy)"
+        setFormTitle(`${original.title} (Copy)`);
+        // Pre-fill the description with the original form description
+        setFormDescription(original.description || '');
+      }
+    }
+  }, [clonedFrom, getForm]);
 
   const handleSaveClick = () => {
     setIsModalOpen(true);
@@ -73,6 +88,12 @@ export const SaveFormButton: React.FC<SaveFormButtonProps> = ({ onSuccess }) => 
             <h3 className="text-lg font-medium text-gray-900 mb-4">Submit Form for Approval</h3>
             
             <div className="space-y-4 mb-6">
+              {originalForm && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-700">
+                  <p>This form is based on: <strong>{originalForm.title}</strong></p>
+                </div>
+              )}
+              
               <div>
                 <label htmlFor="form-title" className="block text-sm font-medium text-gray-700 mb-1">
                   Form Title <span className="text-red-500">*</span>

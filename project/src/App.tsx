@@ -13,6 +13,7 @@ import { Dashboard } from './components/Dashboard';
 import { SaveFormButton } from './components/SaveFormButton';
 import { Toaster } from './components/ui/use-toast';
 import { cn } from './lib/utils';
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
   const { sections, isEditMode, addSection, toggleEditMode, saveVersion, reorderSection } = useFormStore();
@@ -78,6 +79,38 @@ function App() {
       isExpanded: true,
     });
     saveVersion('Initial version');
+  };
+
+  const handleCreateBasedOn = (formId: string) => {
+    if (!isMaker) return; // Only makers can create new forms
+    
+    const form = useFinishedFormsStore.getState().getForm(formId);
+    if (!form) return;
+    
+    setShowDashboard(false);
+    setCurrentFormId(null);
+    
+    // Create a deep copy of the form sections with new IDs
+    const clonedSections = form.sections.map(section => ({
+      ...section,
+      id: uuidv4(),
+      fields: section.fields.map(field => ({
+        ...field,
+        id: uuidv4(),
+      })),
+    }));
+    
+    // Set the form state with the cloned sections
+    useFormStore.setState({
+      sections: clonedSections,
+      isEditMode: true,
+      isDirty: true,
+      currentVersion: null,
+      versions: [],
+      clonedFrom: formId
+    });
+    
+    saveVersion(`Created based on: ${form.title}`);
   };
 
   const handleEditForm = (formId: string) => {
@@ -164,7 +197,27 @@ function App() {
   };
 
   const renderFormTitle = () => {
-    if (!currentFormId) return null;
+    if (!currentFormId) {
+      // Check if this is a new form based on another form
+      const formStore = useFormStore.getState();
+      if (formStore.clonedFrom) {
+        const originalForm = useFinishedFormsStore.getState().getForm(formStore.clonedFrom);
+        if (originalForm) {
+          return (
+            <div className="mb-6 pb-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">New Form</h2>
+              <p className="mt-1 text-gray-600">Based on: {originalForm.title}</p>
+              <div className="mt-2 flex gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                  New Form
+                </span>
+              </div>
+            </div>
+          );
+        }
+      }
+      return null;
+    }
     
     const form = useFinishedFormsStore.getState().getForm(currentFormId);
     if (!form) return null;
@@ -296,7 +349,7 @@ function App() {
               
               {/* Edit Mode Button (Only for Makers) */}
               {!showDashboard && isMaker && (
-                <button
+            <button
                   onClick={handleToggleEditMode}
                   disabled={!canEditCurrentForm()}
                   className={cn(
@@ -306,36 +359,36 @@ function App() {
                       ? "bg-purple-50 text-purple-700" 
                       : "text-gray-600 hover:bg-gray-50"
                   )}
-                >
-                  {isEditMode ? (
-                    <>
+            >
+              {isEditMode ? (
+                <>
                       <Eye className="w-4 h-4" />
                       <span>Preview</span>
-                    </>
-                  ) : (
-                    <>
+                </>
+              ) : (
+                <>
                       <Edit2 className="w-4 h-4" />
                       <span>Edit</span>
-                    </>
-                  )}
-                </button>
+                </>
+              )}
+            </button>
               )}
               
               {/* Add Section Button (Only for Makers in Edit Mode) */}
               {!showDashboard && isMaker && isEditMode && canEditCurrentForm() && (
                 <div className="flex items-center gap-2">
                   <SaveFormButton onSuccess={() => setShowDashboard(true)} />
-                  <button
+              <button
                     onClick={() => addSection({
                       title: 'New Section',
                       fields: [],
                       isExpanded: true,
                     })}
                     className="flex items-center gap-2 px-4 py-2 rounded-md bg-purple-600 text-white shadow-sm hover:bg-purple-700 transition-colors text-sm font-medium"
-                  >
+              >
                     <PlusCircle className="w-4 h-4" />
-                    <span>Add Section</span>
-                  </button>
+                <span>Add Section</span>
+              </button>
                 </div>
               )}
               
@@ -369,9 +422,9 @@ function App() {
                     />
                   </div>
                 </div>
-              )}
-            </div>
+            )}
           </div>
+        </div>
         </header>
 
         <div className="flex min-h-screen pt-16">
@@ -380,7 +433,8 @@ function App() {
             {showDashboard ? (
               <Dashboard 
                 onCreateNewForm={handleCreateNewForm} 
-                onEditForm={handleEditForm} 
+                onEditForm={handleEditForm}
+                onCreateBasedOn={handleCreateBasedOn}
               />
             ) : (
               <div className="max-w-5xl mx-auto px-6 py-8">
@@ -391,7 +445,7 @@ function App() {
                     {sections.length === 0 ? (
                       <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-200">
                         {isMaker && (
-                          <div className="space-y-4">
+        <div className="space-y-4">
                             <div className="text-gray-500">No sections have been added yet</div>
                             <button
                               onClick={() => addSection({ title: 'New Section', fields: [], isExpanded: true })}
@@ -405,9 +459,9 @@ function App() {
                       </div>
                     ) : (
                       <div className="space-y-4 mt-6">
-                        {sections
-                          .sort((a, b) => a.order - b.order)
-                          .map((section) => (
+          {sections
+            .sort((a, b) => a.order - b.order)
+            .map((section) => (
                             <div
                               key={section.id}
                               draggable={isEditMode && isMaker && canEditCurrentForm()}
@@ -420,8 +474,8 @@ function App() {
                             >
                               <Section section={section} />
                             </div>
-                          ))}
-                      </div>
+            ))}
+        </div>
                     )}
                   </div>
                 </div>
@@ -481,11 +535,11 @@ function App() {
                 <div className="p-4 overflow-auto grow">
                   {isEditMode ? <VersionHistory /> : <SubmissionHistory />}
                 </div>
-              </div>
+          </div>
             </aside>
-          )}
-        </div>
+        )}
       </div>
+    </div>
       <Toaster />
     </>
   );

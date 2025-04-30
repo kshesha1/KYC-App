@@ -76,12 +76,23 @@ export interface FormVersion {
   author?: string;
 }
 
+export interface Form {
+  id: string;
+  name: string;
+  description: string;
+  sections: Section[];
+  createdAt: number;
+  updatedAt: number;
+  versions: FormVersion[];
+}
+
 export interface FormState {
   sections: Section[];
   isEditMode: boolean;
-  currentVersion: string | null;
-  versions: FormVersion[];
   isDirty: boolean;
+  currentVersion: FormVersion | null;
+  versions: FormVersion[];
+  clonedFrom: string | null;
   addSection: (section: Omit<Section, 'id' | 'order'>) => void;
   removeSection: (id: string) => void;
   updateSection: (id: string, updates: Partial<Section>) => void;

@@ -150,7 +150,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
         return <DateField {...fieldProps} />;
       case 'checkbox':
         return (
-          <CheckboxField 
+          <CheckboxField
             {...fieldProps}
             isEditMode={isEditMode}
             onLabelChange={(value) => {
@@ -163,7 +163,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
         );
       case 'select':
         return (
-          <SelectField 
+          <SelectField
             {...fieldProps}
             isEditMode={isEditMode}
             onOptionsChange={(options) => {
@@ -238,41 +238,41 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
             )}
             {field.type !== 'checkbox' && (
               <>
-                {isEditMode && isEditingLabel ? (
+        {isEditMode && isEditingLabel ? (
                   <div className="flex items-center gap-2 flex-1">
-                    <input
-                      type="text"
-                      value={labelValue}
-                      onChange={(e) => setLabelValue(e.target.value)}
+            <input
+              type="text"
+              value={labelValue}
+              onChange={(e) => setLabelValue(e.target.value)}
                       className="input-field flex-1"
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleLabelSave}
+              autoFocus
+            />
+            <button
+              onClick={handleLabelSave}
                       className="icon-button"
-                    >
+            >
                       <Check className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
+            </button>
+          </div>
+        ) : (
                   <div className="flex items-center gap-2 flex-1">
                     <label className="block text-sm font-medium text-gray-900 flex-1">
-                      {field.label}
-                      {field.required && <span className="text-red-500 ml-1">*</span>}
-                      {isEditMode && (
-                        <button
-                          onClick={() => setIsEditingLabel(true)}
+            {field.label}
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+            {isEditMode && (
+              <button
+                onClick={() => setIsEditingLabel(true)}
                           className="ml-2 opacity-0 group-hover:opacity-100 icon-button inline-flex"
-                        >
+              >
                           <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </label>
+              </button>
+            )}
+          </label>
                   </div>
                 )}
               </>
-            )}
-            {isEditMode && (
+        )}
+        {isEditMode && (
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setShowConditionEditor(!showConditionEditor)}
@@ -298,8 +298,8 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
                 >
                   <Star className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => removeField(sectionId, field.id)}
+          <button
+            onClick={() => removeField(sectionId, field.id)}
                   className="icon-button text-red-600"
                   title="Remove field"
                 >
@@ -348,7 +348,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
                               value={condition.operator}
                               onChange={(e) => handleUpdateCondition(index, { operator: e.target.value as Operator })}
                               className="select-field input-field w-full"
-                            >
+          >
                               {OPERATORS.map((op) => (
                                 <option key={op.value} value={op.value}>
                                   {op.label}
@@ -405,7 +405,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
                       className="button-primary"
                     >
                       Save Conditions
-                    </button>
+          </button>
                   </div>
                 </div>
               </div>

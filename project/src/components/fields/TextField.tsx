@@ -93,9 +93,9 @@ export const TextField: React.FC<TextFieldProps> = ({ field, onChange, disabled 
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {getIcon()}
         </div>
-        <input
+    <input
           type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
-          value={field.value || ''}
+      value={field.value || ''}
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -111,7 +111,7 @@ export const TextField: React.FC<TextFieldProps> = ({ field, onChange, disabled 
             field.value && isValid && "border-green-300"
           )}
           required={field.required}
-          disabled={disabled}
+      disabled={disabled}
         />
         {field.value && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
