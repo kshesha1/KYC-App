@@ -148,12 +148,7 @@ To access the application, navigate to: [https://kyc-app-4v1umc6r2-krishnas-proj
    - Contextual field-level validation
    - Dynamically displayed sections
 
-### Viewing Forms
-
-- Click a form card to access full details
-- Use the **Copy** button to duplicate contents
-- All attached documents can be viewed within the **Documents** section
 
 ---
 
-This guide serves as the authoritative manual for users operating within the KYC Application. For system-level inquiries or technical assistance, please reach out to your designated administrator or platform support team.
+This guide serves as the authoritative manual for users operating within the KYC Application. 
