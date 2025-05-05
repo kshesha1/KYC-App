@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Edit2, Check, GripVertical, Star, Eye, EyeOff, Plus, X } from 'lucide-react';
+import { Trash2, Edit2, Check, GripVertical, Star, Eye, EyeOff, Plus, X, Type } from 'lucide-react';
 import type { Field, VisibilityCondition, SingleCondition, Operator, LogicalOperator, Section } from '../../types/form';
 import { useFormStore } from '../../store/formStore';
 import { useSubmissionStore } from '../../store/submissionStore';
@@ -33,6 +33,20 @@ const OPERATORS: { value: Operator; label: string }[] = [
   { value: 'ends_with', label: 'Ends with' },
 ];
 
+const FIELD_TYPE_OPTIONS = [
+  { value: 'text', label: 'Text' },
+  { value: 'email', label: 'Email' },
+  { value: 'phone', label: 'Phone' },
+  { value: 'date', label: 'Date' },
+  { value: 'checkbox', label: 'Checkbox' },
+  { value: 'select', label: 'Dropdown' },
+  { value: 'multi_checkbox', label: 'Multi Checkbox' },
+  { value: 'file', label: 'File Upload' },
+  { value: 'address', label: 'Address' },
+  { value: 'table', label: 'Table' },
+  { value: 'calculated', label: 'Calculated' },
+];
+
 export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }) => {
   const { sections, isEditMode, updateField, removeField } = useFormStore();
   const { currentSubmission, updateSubmission } = useSubmissionStore();
@@ -45,6 +59,7 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
   const [logicalOperator, setLogicalOperator] = useState<LogicalOperator>(
     field.visibilityCondition?.logicalOperator || 'and'
   );
+  const [showTypeDropdown, setShowTypeDropdown] = useState(false);
 
   const isVisible = isEditMode || evaluateCondition(
     field.visibilityCondition,
@@ -121,6 +136,26 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
   const availableSourceFields = sections.flatMap((section: Section) =>
     section.fields.filter((f: Field) => f.id !== field.id)
   );
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newType = e.target.value;
+    let updates: Partial<Field> = { type: newType };
+    // Reset or adjust options/values for certain types
+    if (newType === 'select' || newType === 'multi_checkbox') {
+      updates.options = ['Option 1', 'Option 2', 'Option 3'];
+      updates.value = newType === 'multi_checkbox' ? [false, false, false] : '';
+    } else if (newType === 'checkbox') {
+      updates.value = false;
+    } else if (newType === 'table') {
+      updates.value = { columns: [], rows: [] };
+    } else if (newType === 'calculated') {
+      updates.value = '';
+    } else {
+      updates.options = undefined;
+      updates.value = '';
+    }
+    updateField(sectionId, field.id, updates);
+  };
 
   const renderField = () => {
     if (!isEditMode && !isVisible) return null;
@@ -414,6 +449,44 @@ export const FieldRenderer: React.FC<FieldRendererProps> = ({ field, sectionId }
         )}
 
         <div className="field-content">
+          {isEditMode && (
+            <div className="flex items-center gap-2 mb-2">
+              <div className="relative group">
+                <button
+                  className="flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors duration-200"
+                  onClick={() => setShowTypeDropdown(!showTypeDropdown)}
+                >
+                  <Type className="w-3.5 h-3.5" />
+                  <span className="font-medium">{field.type.charAt(0).toUpperCase() + field.type.slice(1)}</span>
+                </button>
+                {showTypeDropdown && (
+                  <div className="absolute z-50 mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-100 animate-fade-in">
+                    <div className="max-h-64 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                      {FIELD_TYPE_OPTIONS.map(opt => (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            handleTypeChange({ target: { value: opt.value } } as React.ChangeEvent<HTMLSelectElement>);
+                            setShowTypeDropdown(false);
+                          }}
+                          className={`flex items-center w-full px-4 py-2.5 text-sm transition-colors duration-150 ${
+                            field.type === opt.value 
+                              ? 'bg-dxc-purple/5 text-dxc-purple font-medium' 
+                              : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          }`}
+                        >
+                          <span className="flex-1 text-left">{opt.label}</span>
+                          {field.type === opt.value && (
+                            <Check className="w-4 h-4 text-dxc-purple" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {renderField()}
         </div>
       </div>

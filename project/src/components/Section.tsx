@@ -11,30 +11,17 @@ interface SectionProps {
 }
 
 export const Section: React.FC<SectionProps> = ({ section }) => {
-  const { toggleSectionExpand, removeSection, addField, updateSection, isEditMode } = useFormStore();
-  const [showFieldSelector, setShowFieldSelector] = useState(false);
+  const { toggleSectionExpand, removeSection, addField, updateSection, isEditMode, reorderField } = useFormStore();
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(section.title);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [draggedField, setDraggedField] = useState<{ id: string; fromIdx: number } | null>(null);
+  const [showFieldSelectorAt, setShowFieldSelectorAt] = useState<number | null>(null);
+  const [showEndFieldSelector, setShowEndFieldSelector] = useState(false);
 
   useEffect(() => {
     setTitleValue(section.title);
   }, [section.title]);
-
-  const handleAddField = (type: FieldType, isMultiSelect?: boolean) => {
-    const fieldType = isMultiSelect && type === 'checkbox' ? 'multi_checkbox' : type;
-    addField(section.id, {
-      type: fieldType,
-      label: `New ${fieldType.replace('_', ' ')} field`,
-      required: false,
-      placeholder: `Enter ${type}...`,
-      options: (type === 'select' || fieldType === 'multi_checkbox') 
-        ? ['Option 1', 'Option 2', 'Option 3'] 
-        : undefined,
-      value: fieldType === 'multi_checkbox' ? [false, false, false] : undefined,
-    });
-    setShowFieldSelector(false);
-  };
 
   const handleTitleSave = () => {
     if (titleValue.trim()) {
@@ -68,6 +55,37 @@ export const Section: React.FC<SectionProps> = ({ section }) => {
       inputRef.current.select();
     }
   }, [isEditingTitle]);
+
+  const handleFieldDragStart = (fieldId: string, idx: number) => {
+    setDraggedField({ id: fieldId, fromIdx: idx });
+  };
+  const handleFieldDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+  const handleFieldDrop = (toIdx: number) => {
+    if (draggedField && draggedField.fromIdx !== toIdx) {
+      reorderField(section.id, draggedField.id, toIdx);
+    }
+    setDraggedField(null);
+  };
+  const handleFieldDragEnd = () => {
+    setDraggedField(null);
+  };
+  const handleAddFieldAt = (idx: number, type: FieldType, isMultiSelect?: boolean) => {
+    const fieldType = isMultiSelect && type === 'checkbox' ? 'multi_checkbox' : type;
+    const newField = {
+      type: fieldType,
+      label: `New ${fieldType.replace('_', ' ')} field`,
+      required: false,
+      placeholder: `Enter ${type}...`,
+      options: (type === 'select' || fieldType === 'multi_checkbox') ? ['Option 1', 'Option 2', 'Option 3'] : undefined,
+      value: fieldType === 'multi_checkbox' ? [false, false, false] : undefined,
+      id: undefined, // will be set in store
+    };
+    useFormStore.getState().addFieldAt(section.id, idx, newField);
+    setShowFieldSelectorAt(null);
+    setShowEndFieldSelector(false);
+  };
 
   return (
     <div className="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
@@ -142,21 +160,75 @@ export const Section: React.FC<SectionProps> = ({ section }) => {
       
       {section.isExpanded && (
         <div className="p-5 space-y-4">
-          {section.fields.map((field) => (
-            <FieldRenderer
+          {section.fields.map((field, idx) => (
+            <div
               key={field.id}
-              field={field}
-              sectionId={section.id}
-            />
+              className="group/field relative flex items-center"
+              draggable={isEditMode}
+              onDragStart={() => handleFieldDragStart(field.id, idx)}
+              onDragOver={handleFieldDragOver}
+              onDrop={() => handleFieldDrop(idx)}
+              onDragEnd={handleFieldDragEnd}
+              style={{ opacity: draggedField?.id === field.id ? 0.5 : 1 }}
+            >
+              {isEditMode && (
+                <div
+                  className="mr-2 cursor-grab opacity-60 hover:opacity-100 transition-opacity"
+                  title="Drag to reorder field"
+                >
+                  <Grip className="w-4 h-4 text-dxc-purple/60" />
+                </div>
+              )}
+              <div className="flex-1">
+                <FieldRenderer field={field} sectionId={section.id} />
+              </div>
+              {/* Minimal '+' button only between fields, not after the last field */}
+              {isEditMode && idx < section.fields.length - 1 && (
+                <button
+                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 bg-white border border-gray-200 rounded-full p-1 opacity-0 group-hover/field:opacity-100 hover:opacity-100 transition-opacity"
+                  style={{ pointerEvents: 'auto' }}
+                  onClick={() => setShowFieldSelectorAt(idx + 1)}
+                  tabIndex={-1}
+                  title="Add field here"
+                >
+                  <Plus className="w-4 h-4 text-dxc-purple" />
+                </button>
+              )}
+              {showFieldSelectorAt === idx + 1 && (
+                <div className="absolute left-1/2 -translate-x-1/2 z-20 mt-2">
+                  <div className="relative">
+                    <button
+                      className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      onClick={() => setShowFieldSelectorAt(null)}
+                      tabIndex={-1}
+                      title="Cancel"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                    <FieldSelector onSelect={(type, isMulti) => handleAddFieldAt(idx + 1, type, isMulti)} />
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
-          
+          {/* Always show Add Field at end */}
           {isEditMode && (
             <div className="mt-6">
-              {showFieldSelector ? (
-                <FieldSelector onSelect={handleAddField} />
+              {showEndFieldSelector ? (
+                <div className="relative">
+                  <button
+                    className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    onClick={() => setShowEndFieldSelector(false)}
+                    tabIndex={-1}
+                    title="Cancel"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                  <FieldSelector onSelect={(type, isMulti) => handleAddFieldAt(section.fields.length, type, isMulti)} />
+                </div>
               ) : (
                 <button
-                  onClick={() => setShowFieldSelector(true)}
+                  onClick={() => setShowEndFieldSelector(true)}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-gray-200 hover:border-dxc-purple/20 hover:bg-dxc-purple/5 transition-all duration-200 text-dxc-purple"
                 >
                   <Plus className="w-4 h-4" />

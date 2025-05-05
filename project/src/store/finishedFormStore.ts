@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { Section } from '../types/form';
 
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+export type ApprovalStatus = 'draft' | 'pending' | 'approved' | 'rejected';
 
 export interface FinishedForm {
   id: string;
@@ -20,7 +20,7 @@ export interface FinishedForm {
 
 interface FinishedFormsState {
   forms: FinishedForm[];
-  addForm: (formData: Omit<FinishedForm, 'id' | 'createdAt' | 'updatedAt' | 'approvalStatus'>) => string;
+  addForm: (formData: Omit<FinishedForm, 'id' | 'createdAt' | 'updatedAt' | 'approvalStatus'>, isDraft?: boolean) => string;
   updateForm: (id: string, updates: Partial<Omit<FinishedForm, 'id' | 'createdAt'>>) => void;
   deleteForm: (id: string) => void;
   getForm: (id: string) => FinishedForm | undefined;
@@ -29,12 +29,13 @@ interface FinishedFormsState {
   getPendingForms: () => FinishedForm[];
   getApprovedForms: () => FinishedForm[];
   getRejectedForms: () => FinishedForm[];
+  getDraftForms: () => FinishedForm[];
 }
 
 export const useFinishedFormsStore = create<FinishedFormsState>((set, get) => ({
   forms: [],
   
-  addForm: (formData) => {
+  addForm: (formData, isDraft = false) => {
     const id = uuidv4();
     const timestamp = Date.now();
     
@@ -46,7 +47,7 @@ export const useFinishedFormsStore = create<FinishedFormsState>((set, get) => ({
           ...formData,
           createdAt: timestamp,
           updatedAt: timestamp,
-          approvalStatus: 'pending'
+          approvalStatus: isDraft ? 'draft' : 'pending'
         }
       ]
     }));
@@ -120,5 +121,9 @@ export const useFinishedFormsStore = create<FinishedFormsState>((set, get) => ({
 
   getRejectedForms: () => {
     return get().forms.filter(form => form.approvalStatus === 'rejected');
+  },
+
+  getDraftForms: () => {
+    return get().forms.filter(form => form.approvalStatus === 'draft');
   }
 })); 
