@@ -35,7 +35,7 @@ export type LogicalOperator = 'and' | 'or';
 export interface SingleCondition {
   sourceFieldId: string;
   operator: Operator;
-  value?: any;
+  value: string;
 }
 
 export interface VisibilityCondition {
@@ -45,7 +45,7 @@ export interface VisibilityCondition {
 
 export interface Field {
   id: string;
-  type: string;
+  type: FieldType;
   label: string;
   title?: string;
   placeholder?: string;
@@ -54,7 +54,7 @@ export interface Field {
   options?: string[];
   isMultiSelect?: boolean;
   visibilityCondition?: VisibilityCondition;
-  order?: number;
+  order: number;
   formula?: CalculationFormula;
 }
 
@@ -62,28 +62,36 @@ export interface Section {
   id: string;
   title: string;
   fields: Field[];
+  isExpanded: boolean;
   order: number;
-  isExpanded?: boolean;
   visibilityCondition?: VisibilityCondition;
 }
 
 export interface FormVersion {
   id: string;
-  timestamp: number;
+  version?: number;
+  timestamp?: number;
   sections: Section[];
   description: string;
-  version: number;
-  author?: string;
+  createdAt?: string;
 }
 
 export interface Form {
   id: string;
-  name: string;
-  description: string;
+  title: string;
+  description?: string;
   sections: Section[];
-  createdAt: number;
-  updatedAt: number;
-  versions: FormVersion[];
+  status: 'draft' | 'submitted' | 'approved' | 'rejected';
+  createdBy: string;
+  createdAt: string;
+  lastSaved?: string;
+  submittedAt?: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+  submittedBy?: string;
+  approvedBy?: string;
+  rejectedBy?: string;
+  rejectionReason?: string;
 }
 
 export interface FormState {

@@ -8,11 +8,12 @@ interface DashboardProps {
   onCreateNewForm: () => void;
   onEditForm: (formId: string) => void;
   onCreateBasedOn: (formId: string) => void;
+  activeRole: 'Maker' | 'Checker';
 }
 
 type FilterStatus = 'all' | ApprovalStatus;
 
-export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditForm, onCreateBasedOn }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditForm, onCreateBasedOn, activeRole }) => {
   const { forms, deleteForm, approveForm, rejectForm } = useFinishedFormsStore();
   const { user } = useUserStore();
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
@@ -46,6 +47,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
   });
 
   const handleOpenReview = (formId: string) => {
+    if (activeRole !== 'Checker') return;
     setReviewId(formId);
     setReviewComments('');
     setReviewModalOpen(true);
@@ -67,6 +69,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
 
   const renderStatusBadge = (status: ApprovalStatus) => {
     switch (status) {
+      case 'draft':
+        return (
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Draft
+          </div>
+        );
       case 'pending':
         return (
           <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-50 text-yellow-600 border border-yellow-100">
@@ -120,13 +128,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
               className="text-sm border-none focus:outline-none bg-transparent"
             >
               <option value="all">All Forms</option>
+              <option value="draft">Draft</option>
               <option value="pending">Pending Review</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
           </div>
           
-          {isMaker && (
+          {activeRole === 'Maker' && (
             <button
               onClick={onCreateNewForm}
               className="flex items-center gap-2 px-4 py-2 rounded-md bg-purple-600 text-white shadow-sm hover:bg-purple-700 transition-colors text-sm font-medium"
@@ -186,7 +195,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
                   {form.title}
                 </h3>
                 <div className="flex gap-2">
-                  {isMaker && (
+                  {activeRole === 'Maker' && (
                     <>
                       {(form.approvalStatus === 'approved' || form.approvalStatus === 'rejected') && (
                         <button
@@ -241,8 +250,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500">{form.sections.length} sections</span>
-                  
-                  {isChecker && form.approvalStatus === 'pending' ? (
+                  {activeRole === 'Checker' && form.approvalStatus === 'pending' ? (
                     <div className="flex justify-between items-center gap-2">
                       <button
                         onClick={() => onEditForm(form.id)}
@@ -263,9 +271,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
                         onClick={() => onEditForm(form.id)}
                         className="text-sm font-medium text-dxc-purple hover:text-dxc-purple-dark"
                       >
-                        {isChecker ? "View" : "Open"} &rarr;
+                        {activeRole === 'Checker' ? "View" : "Open"} &rarr;
                       </button>
-                      {isMaker && (form.approvalStatus === 'approved' || form.approvalStatus === 'rejected') && (
+                      {activeRole === 'Maker' && (form.approvalStatus === 'approved' || form.approvalStatus === 'rejected') && (
                         <button
                           onClick={() => onCreateBasedOn(form.id)}
                           className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -284,7 +292,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onCreateNewForm, onEditFor
       )}
 
       {/* Review Modal */}
-      {reviewModalOpen && reviewId && (
+      {reviewModalOpen && reviewId && activeRole === 'Checker' && (
         <div className="fixed inset-0 bg-black bg-opacity-25 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-md shadow-lg p-6 max-w-md w-full">
             <h3 className="text-base font-medium text-gray-800 mb-4">Review Form</h3>

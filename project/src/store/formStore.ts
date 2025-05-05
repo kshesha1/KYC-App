@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { FormState, Section, Field, FormVersion, Form } from '../types/form';
+import { useFinishedFormsStore } from './finishedFormStore';
 
 const createInitialVersion = (sections: Section[]): FormVersion => ({
   id: uuidv4(),
@@ -9,129 +10,200 @@ const createInitialVersion = (sections: Section[]): FormVersion => ({
   description: 'Initial version',
 });
 
-export const useFormStore = create<FormState>((set, get) => ({
+interface FormStore {
+  sections: Section[];
+  isEditMode: boolean;
+  isDirty: boolean;
+  currentVersion: FormVersion | null;
+  versions: FormVersion[];
+  isDraft: boolean;
+  lastSaved: string | null;
+  addSection: (section: Omit<Section, 'id' | 'order'>) => void;
+  removeSection: (sectionId: string) => void;
+  updateSection: (sectionId: string, updates: Partial<Section>) => void;
+  reorderSection: (sectionId: string, newOrder: number) => void;
+  addField: (sectionId: string, field: Omit<Field, 'id'>) => void;
+  addFieldAt: (sectionId: string, index: number, field: Omit<Field, 'id'>) => void;
+  removeField: (sectionId: string, fieldId: string) => void;
+  updateField: (sectionId: string, fieldId: string, updates: Partial<Field>) => void;
+  reorderField: (sectionId: string, fieldId: string, newOrder: number) => void;
+  toggleEditMode: () => void;
+  saveVersion: (description: string) => void;
+  loadVersion: (versionId: string) => void;
+  saveAsDraft: (formData: Omit<Form, 'id' | 'createdAt' | 'status' | 'createdBy'>) => void;
+  loadDraft: () => void;
+  clearDraft: () => void;
+  forms: Form[];
+  currentForm: Form | null;
+  draftForm: Form | null;
+  addForm: (form: Omit<Form, 'id' | 'createdAt' | 'status' | 'createdBy'>) => void;
+  updateForm: (form: Form) => void;
+  deleteForm: (id: string) => void;
+  setCurrentForm: (form: Form | null) => void;
+  createVersion: (form: Form) => FormVersion;
+  submitDraft: () => void;
+}
+
+export const useFormStore = create<FormStore>((set, get) => ({
   sections: [],
-  isEditMode: false,
+  isEditMode: true,
   isDirty: false,
   currentVersion: null,
   versions: [],
-  clonedFrom: null,
+  isDraft: false,
+  lastSaved: null,
+  forms: [],
+  currentForm: null,
+  draftForm: null,
 
-  addSection: (section) =>
-    set((state) => {
-      const newSections = [
-        ...state.sections,
-        {
-          ...section,
-          id: uuidv4(),
-          order: state.sections.length,
-        },
-      ];
-      return {
-        sections: newSections,
-        isDirty: true,
-      };
-    }),
-
-  removeSection: (id) =>
+  addSection: (section) => {
+    const newSection = {
+      ...section,
+      id: uuidv4(),
+      order: get().sections.length,
+    };
     set((state) => ({
-      sections: state.sections.filter((section) => section.id !== id),
+      sections: [...state.sections, newSection],
       isDirty: true,
-    })),
+    }));
+  },
 
-  updateSection: (id, updates) =>
+  removeSection: (sectionId) => {
     set((state) => ({
-      sections: state.sections.map((section) =>
-        section.id === id ? { ...section, ...updates } : section
+      sections: state.sections.filter((s) => s.id !== sectionId),
+      isDirty: true,
+    }));
+  },
+
+  updateSection: (sectionId, updates) => {
+    set((state) => ({
+      sections: state.sections.map((s) =>
+        s.id === sectionId ? { ...s, ...updates } : s
       ),
       isDirty: true,
-    })),
+    }));
+  },
 
-  toggleSectionExpand: (id) =>
-    set((state) => ({
-      sections: state.sections.map((section) =>
-        section.id === id
-          ? { ...section, isExpanded: !section.isExpanded }
-          : section
-      ),
-    })),
-
-  reorderSection: (id, newOrder) =>
+  reorderSection: (sectionId, newOrder) => {
     set((state) => {
       const sections = [...state.sections];
-      const section = sections.find((s) => s.id === id);
-      if (!section) return state;
+      const sectionIndex = sections.findIndex((s) => s.id === sectionId);
+      if (sectionIndex === -1) return state;
 
-      const oldOrder = section.order;
-      sections.forEach((s) => {
-        if (s.id === id) {
-          s.order = newOrder;
-        } else if (
-          oldOrder < newOrder
-            ? s.order <= newOrder && s.order > oldOrder
-            : s.order >= newOrder && s.order < oldOrder
-        ) {
-          s.order += oldOrder < newOrder ? -1 : 1;
-        }
-      });
+      const [section] = sections.splice(sectionIndex, 1);
+      sections.splice(newOrder, 0, section);
 
-      return { sections, isDirty: true };
-    }),
+      return {
+        sections: sections.map((s, i) => ({ ...s, order: i })),
+        isDirty: true,
+      };
+    });
+  },
 
-  addField: (sectionId, field) =>
+  addField: (sectionId, field) => {
     set((state) => ({
-      sections: state.sections.map((section) =>
-        section.id === sectionId
+      sections: state.sections.map((s) =>
+        s.id === sectionId
           ? {
-              ...section,
-              fields: [...section.fields, { ...field, id: uuidv4() }],
+              ...s,
+              fields: [
+                ...s.fields,
+                { ...field, id: uuidv4(), order: s.fields.length },
+              ],
             }
-          : section
+          : s
       ),
       isDirty: true,
-    })),
+    }));
+  },
 
-  removeField: (sectionId, fieldId) =>
+  addFieldAt: (sectionId, index, field) => {
     set((state) => ({
-      sections: state.sections.map((section) =>
-        section.id === sectionId
+      sections: state.sections.map((s) =>
+        s.id === sectionId
           ? {
-              ...section,
-              fields: section.fields.filter((field) => field.id !== fieldId),
+              ...s,
+              fields: [
+                ...s.fields.slice(0, index),
+                { ...field, id: uuidv4(), order: index },
+                ...s.fields.slice(index),
+              ].map((f, i) => ({ ...f, order: i })),
             }
-          : section
+          : s
       ),
       isDirty: true,
-    })),
+    }));
+  },
 
-  updateField: (sectionId, fieldId, updates) =>
+  removeField: (sectionId, fieldId) => {
     set((state) => ({
-      sections: state.sections.map((section) =>
-        section.id === sectionId
+      sections: state.sections.map((s) =>
+        s.id === sectionId
           ? {
-              ...section,
-              fields: section.fields.map((field) =>
-                field.id === fieldId ? { ...field, ...updates } : field
+              ...s,
+              fields: s.fields.filter((f) => f.id !== fieldId),
+            }
+          : s
+      ),
+      isDirty: true,
+    }));
+  },
+
+  updateField: (sectionId, fieldId, updates) => {
+    set((state) => ({
+      sections: state.sections.map((s) =>
+        s.id === sectionId
+          ? {
+              ...s,
+              fields: s.fields.map((f) =>
+                f.id === fieldId ? { ...f, ...updates } : f
               ),
             }
-          : section
+          : s
       ),
       isDirty: true,
-    })),
+    }));
+  },
 
-  toggleEditMode: () =>
+  reorderField: (sectionId, fieldId, newOrder) => {
+    set((state) => {
+      const sections = [...state.sections];
+      const sectionIndex = sections.findIndex((s) => s.id === sectionId);
+      if (sectionIndex === -1) return state;
+
+      const section = sections[sectionIndex];
+      const fieldIndex = section.fields.findIndex((f) => f.id === fieldId);
+      if (fieldIndex === -1) return state;
+
+      const fields = [...section.fields];
+      const [field] = fields.splice(fieldIndex, 1);
+      fields.splice(newOrder, 0, field);
+
+      sections[sectionIndex] = {
+        ...section,
+        fields: fields.map((f, i) => ({ ...f, order: i })),
+      };
+
+      return {
+        sections,
+        isDirty: true,
+      };
+    });
+  },
+
+  toggleEditMode: () => {
     set((state) => ({
       isEditMode: !state.isEditMode,
-    })),
+    }));
+  },
 
-  saveVersion: (description: string) => {
-    const state = get();
+  saveVersion: (description) => {
+    const { sections, currentVersion } = get();
     const newVersion: FormVersion = {
       id: uuidv4(),
-      version: state.versions.length + 1,
-      timestamp: Date.now(),
-      sections: state.sections,
-      description: description || `Version ${state.versions.length + 1}`,
+      description,
+      sections: JSON.parse(JSON.stringify(sections)),
+      createdAt: new Date().toISOString(),
     };
 
     set((state) => ({
@@ -141,46 +213,116 @@ export const useFormStore = create<FormState>((set, get) => ({
     }));
   },
 
-  loadVersion: (versionId: string) => {
-    const state = get();
-    const version = state.versions.find((v) => v.id === versionId);
-    if (version && version.id === versionId) {
+  loadVersion: (versionId) => {
+    const version = get().versions.find((v) => v.id === versionId);
+    if (version) {
       set({
-        sections: version.sections,
+        sections: JSON.parse(JSON.stringify(version.sections)),
         currentVersion: version,
         isDirty: false,
       });
     }
   },
 
-  discardChanges: () =>
+  saveAsDraft: (formData) => {
+    const draft: Form = {
+      ...formData,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      status: 'draft',
+      createdBy: 'currentUser', // This should be replaced with actual user ID
+      lastSaved: new Date().toISOString(),
+    };
+    set({ draftForm: draft });
+    localStorage.setItem('formDraft', JSON.stringify(draft));
+
+    // Add to finishedFormStore for dashboard visibility
+    const finishedFormsStore = useFinishedFormsStore.getState();
+    // Check if a draft with the same id already exists
+    const existing = finishedFormsStore.forms.find(f => f.id === draft.id);
+    if (!existing) {
+      finishedFormsStore.addForm({
+        title: draft.title,
+        description: draft.description || '',
+        sections: draft.sections,
+        createdBy: draft.createdBy,
+      }, true);
+    }
+  },
+
+  loadDraft: () => {
+    const savedDraft = localStorage.getItem('formDraft');
+    if (savedDraft) {
+      const draft = JSON.parse(savedDraft) as Form;
+      set({ draftForm: draft });
+    }
+  },
+
+  clearDraft: () => {
+    set({ draftForm: null });
+    localStorage.removeItem('formDraft');
+  },
+
+  addForm: (formData) => {
+    const newForm: Form = {
+      ...formData,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      status: 'submitted',
+      createdBy: 'currentUser', // This should be replaced with actual user ID
+    };
+    set((state) => ({
+      forms: [...state.forms, newForm],
+      currentForm: newForm,
+    }));
+  },
+
+  updateForm: (form) => {
+    set((state) => ({
+      forms: state.forms.map((f) => (f.id === form.id ? form : f)),
+      currentForm: form,
+    }));
+  },
+
+  deleteForm: (id) => {
+    set((state) => ({
+      forms: state.forms.filter((f) => f.id !== id),
+      currentForm: state.currentForm?.id === id ? null : state.currentForm,
+    }));
+  },
+
+  setCurrentForm: (form) => {
+    set({ currentForm: form });
+  },
+
+  createVersion: (form) => {
+    return {
+      id: uuidv4(),
+      version: 1,
+      timestamp: Date.now(),
+      sections: form.sections,
+      description: form.description || '',
+      createdAt: new Date().toISOString(),
+    };
+  },
+
+  submitDraft: () => {
     set((state) => {
-      const currentVersion = state.versions.find(
-        (v) => v.id === state.currentVersion
-      );
-      if (!currentVersion) return state;
+      if (!state.draftForm) return state;
+      
+      const submittedForm: Form = {
+        ...state.draftForm,
+        status: 'submitted',
+        submittedAt: new Date().toISOString(),
+        submittedBy: 'currentUser', // This should be replaced with actual user ID
+      };
 
       return {
-        sections: JSON.parse(JSON.stringify(currentVersion.sections)),
-        isDirty: false,
+        forms: [...state.forms, submittedForm],
+        currentForm: submittedForm,
+        draftForm: null,
       };
-    }),
-
-  cloneForm: (form: Form) => {
-    const clonedSections = form.sections.map((section: Section) => ({
-      ...section,
-      id: uuidv4(),
-      fields: section.fields.map((field: Field) => ({
-        ...field,
-        id: uuidv4(),
-      })),
-    }));
-
-    set({
-      sections: clonedSections,
-      isEditMode: true,
-      isDirty: true,
-      clonedFrom: form.id,
     });
+    localStorage.removeItem('formDraft');
   },
 }));

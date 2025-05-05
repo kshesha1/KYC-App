@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { PlusCircle, Eye, Edit2, ChevronRight, ChevronLeft, LayoutDashboard, Save, CheckCircle, XCircle } from 'lucide-react';
 import { useFormStore } from './store/formStore';
 import { useSubmissionStore } from './store/submissionStore';
-import { useUserStore } from './store/userStore';
+import { useSession, SessionProvider } from './store/SessionContext';
 import { useFinishedFormsStore } from './store/finishedFormStore';
 import { Section } from './components/Section';
 import { VersionHistory } from './components/VersionHistory';
@@ -14,18 +14,38 @@ import { SaveFormButton } from './components/SaveFormButton';
 import { Toaster } from './components/ui/use-toast';
 import { cn } from './lib/utils';
 import { v4 as uuidv4 } from 'uuid';
+import LoginPage from './pages/LoginPage';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
-function App() {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useSession();
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+};
+
+const MainApp: React.FC = () => {
   const { sections, isEditMode, addSection, toggleEditMode, saveVersion, reorderSection } = useFormStore();
   const { currentSubmission, addSubmission } = useSubmissionStore();
-  const { user, switchRole, logout } = useUserStore();
+  const { user, setUser, logout } = useSession();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [showDashboard, setShowDashboard] = useState(true);
   const [currentFormId, setCurrentFormId] = useState<string | null>(null);
   const [reviewComments, setReviewComments] = useState('');
 
-  const isMaker = user?.role === 'maker';
-  const isChecker = user?.role === 'checker';
+  // Determine roles from session user
+  const isMaker = user?.roles.includes('Maker');
+  const isChecker = user?.roles.includes('Checker');
+
+  // Role switching logic for UI (not for permissions)
+  const [activeRole, setActiveRole] = useState<'Maker' | 'Checker'>('Maker');
+  useEffect(() => {
+    if (user?.roles.includes('Maker')) setActiveRole('Maker');
+    else if (user?.roles.includes('Checker')) setActiveRole('Checker');
+  }, [user]);
+
+  const handleRoleChange = (role: 'Maker' | 'Checker') => {
+    setActiveRole(role);
+  };
 
   // Create initial version when the app loads
   useEffect(() => {
@@ -37,13 +57,13 @@ function App() {
       });
       saveVersion('Initial version');
     }
-  }, [user?.role]);
+  }, [user?.roles]);
 
   // If user role changes, show dashboard
   useEffect(() => {
     setShowDashboard(true);
     setCurrentFormId(null);
-  }, [user?.role]);
+  }, [user?.roles]);
 
   const handleLogout = () => {
     logout();
@@ -251,8 +271,19 @@ function App() {
           )}
         </div>
         
+        {form.createdBy && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-2">
+            <span>Created by: {form.createdBy}</span>
+          </div>
+        )}
+        {form.reviewedBy && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+            <span>Reviewed by: {form.reviewedBy}</span>
+          </div>
+        )}
+        
         {/* Checker Review Controls */}
-        {isChecker && form.approvalStatus === 'pending' && (
+        {activeRole === 'Checker' && isChecker && form.approvalStatus === 'pending' && (
           <div className="mt-5 border border-gray-200 rounded-md overflow-hidden">
             <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-700 flex items-center">
@@ -291,93 +322,92 @@ function App() {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 h-16">
-          <div className="max-w-screen-2xl mx-auto px-6 h-full flex items-center justify-between">
-            {/* Left Side - Logo & App Name */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50 h-16">
+        <div className="max-w-screen-2xl mx-auto px-6 h-full flex items-center justify-between">
+          {/* Left Side - Logo & App Name */}
+          <div className="flex items-center">
             <div className="flex items-center">
-              <div className="flex items-center">
-                <div className="dxc-logo w-8 h-8 bg-contain bg-no-repeat bg-center"></div>
-                <div className="ml-3 flex items-center">
-                  <span className="text-lg font-semibold text-gray-900">KYC</span>
-                  <span className="text-gray-500 mx-1.5">|</span>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium leading-tight text-gray-700">Enterprise Portal</span>
-                    <span className="text-xs text-gray-500 leading-tight">Client Verification System</span>
-                  </div>
+              <div className="dxc-logo w-8 h-8 bg-contain bg-no-repeat bg-center"></div>
+              <div className="ml-3 flex items-center">
+                <span className="text-lg font-semibold text-gray-900">KYC</span>
+                <span className="text-gray-500 mx-1.5">|</span>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium leading-tight text-gray-700">Enterprise Portal</span>
+                  <span className="text-xs text-gray-500 leading-tight">Client Verification System</span>
                 </div>
-              </div>
-              
-              {/* Environment Tag */}
-              <div className="hidden md:flex ml-4 px-2 py-0.5 rounded border border-blue-100 bg-blue-50">
-                <span className="text-xs font-medium text-blue-700">Production</span>
               </div>
             </div>
             
-            {/* Center - Spacer */}
-            <div className="flex-1"></div>
+            {/* Environment Tag */}
+            <div className="hidden md:flex ml-4 px-2 py-0.5 rounded border border-blue-100 bg-blue-50">
+              <span className="text-xs font-medium text-blue-700">Production</span>
+            </div>
+          </div>
+          
+          {/* Center - Spacer */}
+          <div className="flex-1"></div>
+          
+          {/* Right Side - Navigation and Profile */}
+          <div className="flex items-center space-x-5">
+            {/* Activity & Notifications */}
+            <div className="hidden sm:flex items-center space-x-3 mr-1">
+              <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 relative">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+              </button>
+              <div className="h-6 w-px bg-gray-200"></div>
+            </div>
             
-            {/* Right Side - Navigation and Profile */}
-            <div className="flex items-center space-x-5">
-              {/* Activity & Notifications */}
-              <div className="hidden sm:flex items-center space-x-3 mr-1">
-                <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 relative">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                  </svg>
-                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                </button>
-                <div className="h-6 w-px bg-gray-200"></div>
-              </div>
-              
-              {/* Dashboard Button */}
+            {/* Dashboard Button */}
+            <button
+              onClick={() => setShowDashboard(true)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                showDashboard 
+                  ? "bg-blue-50 text-blue-700" 
+                  : "text-gray-600 hover:bg-gray-50"
+              )}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Dashboard</span>
+            </button>
+            
+            {/* Edit Mode Button (Only for Makers) */}
+            {!showDashboard && isMaker && (
               <button
-                onClick={() => setShowDashboard(true)}
+                onClick={handleToggleEditMode}
+                disabled={!canEditCurrentForm()}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                  showDashboard 
-                    ? "bg-blue-50 text-blue-700" 
+                  !canEditCurrentForm() && "opacity-50 cursor-not-allowed",
+                  isEditMode 
+                    ? "bg-purple-50 text-purple-700" 
                     : "text-gray-600 hover:bg-gray-50"
                 )}
               >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Dashboard</span>
+                {isEditMode ? (
+                  <>
+                        <Eye className="w-4 h-4" />
+                        <span>Preview</span>
+                  </>
+                ) : (
+                  <>
+                        <Edit2 className="w-4 h-4" />
+                        <span>Edit</span>
+                  </>
+                )}
               </button>
-              
-              {/* Edit Mode Button (Only for Makers) */}
-              {!showDashboard && isMaker && (
-            <button
-                  onClick={handleToggleEditMode}
-                  disabled={!canEditCurrentForm()}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors",
-                    !canEditCurrentForm() && "opacity-50 cursor-not-allowed",
-                    isEditMode 
-                      ? "bg-purple-50 text-purple-700" 
-                      : "text-gray-600 hover:bg-gray-50"
-                  )}
-            >
-              {isEditMode ? (
-                <>
-                      <Eye className="w-4 h-4" />
-                      <span>Preview</span>
-                </>
-              ) : (
-                <>
-                      <Edit2 className="w-4 h-4" />
-                      <span>Edit</span>
-                </>
-              )}
-            </button>
-              )}
-              
-              {/* Add Section Button (Only for Makers in Edit Mode) */}
-              {!showDashboard && isMaker && isEditMode && canEditCurrentForm() && (
-                <div className="flex items-center gap-2">
-                  <SaveFormButton onSuccess={() => setShowDashboard(true)} />
+            )}
+            
+            {/* Add Section Button (Only for Makers in Edit Mode) */}
+            {!showDashboard && isMaker && isEditMode && canEditCurrentForm() && (
+              <div className="flex items-center gap-2">
+                <SaveFormButton onSuccess={() => setShowDashboard(true)} />
               <button
                     onClick={() => addSection({
                       title: 'New Section',
@@ -389,159 +419,172 @@ function App() {
                     <PlusCircle className="w-4 h-4" />
                 <span>Add Section</span>
               </button>
-                </div>
-              )}
-              
-              {/* User Profile */}
-              {user && (
-                <div className="flex items-center">
-                  <div className="hidden md:flex items-center border-l border-gray-200 ml-2 pl-4">
-                    <div className="flex flex-col mr-3">
-                      <p className="text-sm font-medium text-gray-800">{user.name}</p>
-                      <div className="flex items-center">
-                        <span className={cn(
-                          "inline-block w-1.5 h-1.5 rounded-full mr-1",
-                          user.role === 'maker' ? "bg-blue-500" : "bg-green-500"
-                        )}></span>
-                        <p className="text-xs text-gray-500">
-                          {user.role === 'maker' ? 'Maker' : 'Checker'}
-                        </p>
-                      </div>
-                    </div>
-                    <ProfileMenu
-                      user={user}
-                      onRoleChange={switchRole}
-                      onLogout={handleLogout}
-                    />
-                  </div>
-                  <div className="md:hidden">
-                    <ProfileMenu
-                      user={user}
-                      onRoleChange={switchRole}
-                      onLogout={handleLogout}
-                    />
-                  </div>
-                </div>
-            )}
-          </div>
-        </div>
-        </header>
-
-        <div className="flex min-h-screen pt-16">
-          {/* Main Content */}
-          <div className="flex-1 relative">
-            {showDashboard ? (
-              <Dashboard 
-                onCreateNewForm={handleCreateNewForm} 
-                onEditForm={handleEditForm}
-                onCreateBasedOn={handleCreateBasedOn}
-              />
-            ) : (
-              <div className="max-w-5xl mx-auto px-6 py-8">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                  <div className="p-6">
-                    {renderFormTitle()}
-                    
-                    {sections.length === 0 ? (
-                      <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                        {isMaker && (
-        <div className="space-y-4">
-                            <div className="text-gray-500">No sections have been added yet</div>
-                            <button
-                              onClick={() => addSection({ title: 'New Section', fields: [], isExpanded: true })}
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-                            >
-                              <PlusCircle className="w-4 h-4" />
-                              <span>Add First Section</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-4 mt-6">
-          {sections
-            .sort((a, b) => a.order - b.order)
-            .map((section) => (
-                            <div
-                              key={section.id}
-                              draggable={isEditMode && isMaker && canEditCurrentForm()}
-                              onDragStart={(e) => handleDragStart(e, section.id, section.order)}
-                              onDragEnd={handleDragEnd}
-                              onDragOver={handleDragOver}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDrop(e, section.order)}
-                              className="border border-gray-100 rounded-md hover:border-gray-200 transition-colors"
-                            >
-                              <Section section={section} />
-                            </div>
-            ))}
-        </div>
-                    )}
-                  </div>
-                </div>
               </div>
             )}
             
-            {/* Form Actions - Now outside the sidebar */}
-            {!isEditMode && !showDashboard && !isChecker && <FormActions />}
+            {/* User Profile */}
+            {user && (
+              <div className="flex items-center">
+                <div className="hidden md:flex items-center border-l border-gray-200 ml-2 pl-4">
+                  <div className="flex flex-col mr-3">
+                    <p className="text-sm font-medium text-gray-800">{user.name}</p>
+                    <div className="flex items-center">
+                      <span className={cn(
+                        "inline-block w-1.5 h-1.5 rounded-full mr-1",
+                        activeRole === 'Maker' ? "bg-blue-500" : "bg-green-500"
+                      )}></span>
+                      <p className="text-xs text-gray-500">
+                        {activeRole === 'Maker' ? 'Maker' : 'Checker'}
+                      </p>
+                    </div>
+                  </div>
+                  <ProfileMenu
+                    user={{
+                      name: user.name,
+                      email: user.email,
+                      role: activeRole.toLowerCase() as 'maker' | 'checker',
+                    }}
+                    onRoleChange={handleRoleChange}
+                    onLogout={handleLogout}
+                  />
+                </div>
+                <div className="md:hidden">
+                  <ProfileMenu
+                    user={{
+                      name: user.name,
+                      email: user.email,
+                      role: activeRole.toLowerCase() as 'maker' | 'checker',
+                    }}
+                    onRoleChange={handleRoleChange}
+                    onLogout={handleLogout}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+        </div>
+      </header>
 
-          {/* Sidebar */}
-          {!showDashboard && !isChecker && (
-            <aside
+      <div className="flex min-h-screen pt-16">
+        {/* Main Content */}
+        <div className="flex-1 relative">
+          {showDashboard ? (
+            <Dashboard 
+              onCreateNewForm={handleCreateNewForm} 
+              onEditForm={handleEditForm}
+              onCreateBasedOn={handleCreateBasedOn}
+              activeRole={activeRole}
+            />
+          ) : (
+            <div className="max-w-5xl mx-auto px-6 py-8">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6">
+                  {renderFormTitle()}
+                  {sections.length === 0 ? (
+                    <div className="text-center py-16 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                      {isMaker && (
+                        <div className="space-y-4">
+                          <div className="text-gray-500">No sections have been added yet</div>
+                          <button
+                            onClick={() => addSection({ title: 'New Section', fields: [], isExpanded: true })}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                          >
+                            <PlusCircle className="w-4 h-4" />
+                            <span>Add First Section</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-4 mt-6">
+                      {sortedSections.map((section) => (
+                        <div
+                          key={section.id}
+                          draggable={isEditMode && isMaker && canEditCurrentForm()}
+                          onDragStart={(e) => handleDragStart(e, section.id, section.order)}
+                          onDragEnd={handleDragEnd}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, section.order)}
+                          className="border border-gray-100 rounded-md hover:border-gray-200 transition-colors"
+                        >
+                          <Section section={section} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Form Actions - Now outside the sidebar */}
+          {!isEditMode && !showDashboard && !isChecker && <FormActions />}
+        </div>
+        {/* Sidebar */}
+        {!showDashboard && !isChecker && (
+          <aside
+            className={cn(
+              "w-96 border-l border-gray-200 bg-white/80 backdrop-blur-sm",
+              "fixed top-16 bottom-0 right-0 transition-transform duration-300",
+              "lg:relative lg:top-0 lg:translate-x-0",
+              isSidebarOpen ? "translate-x-0" : "translate-x-full"
+            )}
+          >
+            <button
+              onClick={() => setIsSidebarOpen(false)}
               className={cn(
-                "w-96 border-l border-gray-200 bg-white/80 backdrop-blur-sm",
-                "fixed top-16 bottom-0 right-0 transition-transform duration-300",
-                "lg:relative lg:top-0 lg:translate-x-0",
-                isSidebarOpen ? "translate-x-0" : "translate-x-full"
+                "absolute top-4 -left-12 p-2 rounded-lg",
+                "bg-white/80 backdrop-blur-sm border border-gray-200",
+                "hover:bg-gray-50 transition-colors duration-200",
+                "lg:hidden",
+                !isSidebarOpen && "hidden"
               )}
             >
-              <button
-                onClick={() => setIsSidebarOpen(false)}
-                className={cn(
-                  "absolute top-4 -left-12 p-2 rounded-lg",
-                  "bg-white/80 backdrop-blur-sm border border-gray-200",
-                  "hover:bg-gray-50 transition-colors duration-200",
-                  "lg:hidden",
-                  !isSidebarOpen && "hidden"
-                )}
-              >
-                <ChevronRight className="w-5 h-5 text-gray-600" />
-              </button>
-
-              {/* Sidebar Toggle (Mobile) */}
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className={cn(
-                  "fixed bottom-4 right-4 p-3 rounded-full",
-                  "bg-dxc-purple text-white shadow-lg",
-                  "lg:hidden",
-                  isSidebarOpen && "hidden"
-                )}
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              {/* Sidebar Content */}
-              <div className="flex-1 flex flex-col min-h-0">
-                {/* Header */}
-                <div className="p-4 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-                  <h2 className="text-lg font-medium text-dxc-purple">
-                    {isEditMode ? "Version History" : "Form Submissions"}
-                  </h2>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 overflow-auto grow">
-                  {isEditMode ? <VersionHistory /> : <SubmissionHistory />}
-                </div>
-          </div>
-            </aside>
+              <ChevronRight className="w-5 h-5 text-gray-600" />
+            </button>
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className={cn(
+                "fixed bottom-4 right-4 p-3 rounded-full",
+                "bg-dxc-purple text-white shadow-lg",
+                "lg:hidden",
+                isSidebarOpen && "hidden"
+              )}
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="p-4 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+                <h2 className="text-lg font-medium text-dxc-purple">
+                  {isEditMode ? "Version History" : "Form Submissions"}
+                </h2>
+              </div>
+              <div className="p-4 overflow-auto grow">
+                {isEditMode ? <VersionHistory /> : <SubmissionHistory />}
+              </div>
+            </div>
+          </aside>
         )}
       </div>
-    </div>
       <Toaster />
-    </>
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <SessionProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <MainApp />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </SessionProvider>
   );
 }
 

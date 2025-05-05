@@ -14,14 +14,31 @@ interface AddressValue {
   city: string;
   state: string;
   zipCode: string;
+  country: string;
 }
+
+const COUNTRIES = [
+  'United States',
+  'Canada',
+  'United Kingdom',
+  'Australia',
+  'Germany',
+  'France',
+  'Japan',
+  'China',
+  'India',
+  'Brazil',
+  'Mexico',
+  'South Africa',
+  'Other'
+];
 
 export const AddressField: React.FC<AddressFieldProps> = ({ field, onChange, disabled = false }) => {
   const [address, setAddress] = useState<AddressValue>(() => {
     try {
-      return field.value ? JSON.parse(field.value) : { street: '', city: '', state: '', zipCode: '' };
+      return field.value ? JSON.parse(field.value) : { street: '', city: '', state: '', zipCode: '', country: '' };
     } catch {
-      return { street: '', city: '', state: '', zipCode: '' };
+      return { street: '', city: '', state: '', zipCode: '', country: '' };
     }
   });
 
@@ -34,7 +51,8 @@ export const AddressField: React.FC<AddressFieldProps> = ({ field, onChange, dis
           'street' in parsedValue &&
           'city' in parsedValue &&
           'state' in parsedValue &&
-          'zipCode' in parsedValue
+          'zipCode' in parsedValue &&
+          'country' in parsedValue
         ) {
           setAddress(parsedValue);
         }
@@ -44,7 +62,7 @@ export const AddressField: React.FC<AddressFieldProps> = ({ field, onChange, dis
     }
   }, [field.value]);
 
-  const handleChange = (key: keyof AddressValue) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (key: keyof AddressValue) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const newAddress = { ...address, [key]: e.target.value };
     setAddress(newAddress);
     onChange(JSON.stringify(newAddress));
@@ -88,7 +106,7 @@ export const AddressField: React.FC<AddressFieldProps> = ({ field, onChange, dis
           type="text"
           value={address.state}
           onChange={handleChange('state')}
-          placeholder="State"
+          placeholder="State/Province"
           className={cn(
             "w-full px-3 py-2 border border-gray-300 rounded-md",
             "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
@@ -98,18 +116,39 @@ export const AddressField: React.FC<AddressFieldProps> = ({ field, onChange, dis
         />
       </div>
       
-      <input
-        type="text"
-        value={address.zipCode}
-        onChange={handleChange('zipCode')}
-        placeholder="ZIP Code"
-        className={cn(
-          "w-full px-3 py-2 border border-gray-300 rounded-md",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-          disabled && "bg-gray-50 cursor-not-allowed"
-        )}
-        disabled={disabled}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <input
+          type="text"
+          value={address.zipCode}
+          onChange={handleChange('zipCode')}
+          placeholder="ZIP/Postal Code"
+          className={cn(
+            "w-full px-3 py-2 border border-gray-300 rounded-md",
+            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+            disabled && "bg-gray-50 cursor-not-allowed"
+          )}
+          disabled={disabled}
+        />
+
+        <select
+          value={address.country}
+          onChange={handleChange('country')}
+          className={cn(
+            "w-full px-3 py-2 border border-gray-300 rounded-md",
+            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+            disabled && "bg-gray-50 cursor-not-allowed",
+            "appearance-none bg-white",
+            "bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236B7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E')]",
+            "bg-no-repeat bg-right-2 bg-[length:1.25rem]"
+          )}
+          disabled={disabled}
+        >
+          <option value="">Select Country</option>
+          {COUNTRIES.map(country => (
+            <option key={country} value={country}>{country}</option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }; 

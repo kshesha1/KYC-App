@@ -12,19 +12,21 @@ import { UserAvatar } from './UserAvatar';
 import { Check, LogOut, Pen, User, Settings } from 'lucide-react';
 import { toast } from './ui/use-toast';
 import { ProfilePage } from './ProfilePage';
+import { useNavigate } from 'react-router-dom';
 
 interface ProfileMenuProps {
   user: {
     name: string;
     email: string;
-    role: 'maker' | 'checker';
+    role: 'maker' | 'checker' | 'Maker' | 'Checker';
   };
-  onRoleChange: (role: 'maker' | 'checker') => void;
+  onRoleChange: (role: 'Maker' | 'Checker') => void;
   onLogout: () => void;
 }
 
 export function ProfileMenu({ user, onRoleChange, onLogout }: ProfileMenuProps) {
   const [showProfile, setShowProfile] = React.useState(false);
+  const navigate = useNavigate();
 
   const getInitials = (name: string) => {
     return name
@@ -34,12 +36,18 @@ export function ProfileMenu({ user, onRoleChange, onLogout }: ProfileMenuProps) 
       .toUpperCase();
   };
 
-  const handleRoleChange = (newRole: 'maker' | 'checker') => {
-    onRoleChange(newRole);
+  const handleRoleChange = (newRole: 'maker' | 'checker' | 'Maker' | 'Checker') => {
+    const role = (newRole.charAt(0).toUpperCase() + newRole.slice(1).toLowerCase()) as 'Maker' | 'Checker';
+    onRoleChange(role);
     toast({
       title: `Role Changed`,
-      description: `Now acting as: ${newRole.charAt(0).toUpperCase() + newRole.slice(1)}`,
+      description: `Now acting as: ${role}`,
     });
+  };
+
+  const handleLogout = () => {
+    onLogout();
+    navigate('/login');
   };
 
   return (
@@ -76,20 +84,20 @@ export function ProfileMenu({ user, onRoleChange, onLogout }: ProfileMenuProps) 
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            {user.role === 'checker' ? (
-              <DropdownMenuItem onClick={() => handleRoleChange('maker')} className="flex items-center cursor-pointer">
+            {user.role === 'checker' || user.role === 'Checker' ? (
+              <DropdownMenuItem onClick={() => handleRoleChange('Maker')} className="flex items-center cursor-pointer">
                 <Pen className="mr-2 h-4 w-4 text-blue-500" />
                 <span>Switch to Maker</span>
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem onClick={() => handleRoleChange('checker')} className="flex items-center cursor-pointer">
+              <DropdownMenuItem onClick={() => handleRoleChange('Checker')} className="flex items-center cursor-pointer">
                 <Check className="mr-2 h-4 w-4 text-green-500" />
                 <span>Switch to Checker</span>
               </DropdownMenuItem>
             )}
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={onLogout} className="text-red-600 flex items-center cursor-pointer">
+          <DropdownMenuItem onClick={handleLogout} className="text-red-600 flex items-center cursor-pointer">
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>

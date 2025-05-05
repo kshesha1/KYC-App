@@ -157,3 +157,4 @@ To access the application, navigate to: [https://kyc-app-4v1umc6r2-krishnas-proj
 ---
 
 This guide serves as the authoritative manual for users operating within the KYC Application. For system-level inquiries or technical assistance, please reach out to your designated administrator or platform support team.
+ 

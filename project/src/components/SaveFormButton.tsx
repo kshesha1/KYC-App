@@ -3,6 +3,7 @@ import { Save, Check } from 'lucide-react';
 import { useFormStore } from '../store/formStore';
 import { useFinishedFormsStore } from '../store/finishedFormStore';
 import { useUserStore } from '../store/userStore';
+import { useSession } from '../store/SessionContext';
 
 interface SaveFormButtonProps {
   onSuccess?: () => void;
@@ -12,6 +13,7 @@ export const SaveFormButton: React.FC<SaveFormButtonProps> = ({ onSuccess }) => 
   const { sections, saveVersion, clonedFrom } = useFormStore();
   const { addForm, getForm } = useFinishedFormsStore();
   const { user } = useUserStore();
+  const { user: sessionUser } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formTitle, setFormTitle] = useState('');
   const [formDescription, setFormDescription] = useState('');
@@ -42,7 +44,7 @@ export const SaveFormButton: React.FC<SaveFormButtonProps> = ({ onSuccess }) => 
   };
 
   const handleSaveForm = () => {
-    if (!formTitle.trim() || !user) return;
+    if (!formTitle.trim() || !sessionUser) return;
     
     setIsSaving(true);
     
@@ -55,7 +57,7 @@ export const SaveFormButton: React.FC<SaveFormButtonProps> = ({ onSuccess }) => 
         title: formTitle,
         description: formDescription,
         sections: JSON.parse(JSON.stringify(sections)),
-        createdBy: user.name
+        createdBy: `${sessionUser.name} (${sessionUser.email})`
       });
       
       setIsModalOpen(false);

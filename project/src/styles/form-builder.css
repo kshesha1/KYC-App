@@ -1,0 +1,117 @@
+.form-builder {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.form-builder-header {
+  margin-bottom: 2rem;
+}
+
+.form-builder-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.form-builder-header p {
+  color: #666;
+  margin-bottom: 1rem;
+}
+
+.form-builder-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-editor {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-editor h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.section-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field-renderer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field-header label {
+  font-weight: 500;
+}
+
+.field-selector {
+  position: relative;
+}
+
+.field-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.field-type-button {
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.field-type-button:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="phone"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+}
+
+input[type="text"]:disabled,
+input[type="email"]:disabled,
+input[type="phone"]:disabled,
+input[type="number"]:disabled,
+input[type="date"]:disabled,
+textarea:disabled,
+select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+} 
