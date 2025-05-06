@@ -7,6 +7,17 @@ interface SectionEditorProps {
   isEditing: boolean;
   onUpdate: (section: Section) => void;
 }
+/**
+ * SectionEditor Component
+ * 
+ * A reusable component for editing and displaying form sections.
+ * Handles the rendering and updating of fields within a section.
+ * 
+ * Props:
+ * - section: The section data containing fields and metadata
+ * - isEditing: Boolean flag to control edit mode
+ * - onUpdate: Callback function to handle section updates
+ */
 
 export const SectionEditor: React.FC<SectionEditorProps> = ({
   section,
